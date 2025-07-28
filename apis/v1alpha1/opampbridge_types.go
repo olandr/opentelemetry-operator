@@ -83,6 +83,9 @@ type OpAMPBridgeSpec struct {
 	// HostNetwork indicates if the pod should run in the host networking namespace.
 	// +optional
 	HostNetwork bool `json:"hostNetwork,omitempty"`
+	// HostPID indicates if the pod should have access to the host process ID namespace.
+	// +optional
+	HostPID bool `json:"hostPID,omitempty"`
 	// If specified, indicates the pod's priority.
 	// If not specified, the pod priority will be default or zero if there is no
 	// default.

@@ -482,3 +482,45 @@ func TestDeploymentDNSConfig(t *testing.T) {
 	assert.Equal(t, v1.DNSPolicy("None"), d.Spec.Template.Spec.DNSPolicy)
 	assert.Equal(t, d.Spec.Template.Spec.DNSConfig.Nameservers, []string{"8.8.8.8"})
 }
+
+func TestDeploymentHostPID(t *testing.T) {
+	// Test default
+	opampBridge1 := v1alpha1.OpAMPBridge{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "my-instance",
+		},
+	}
+
+	cfg := config.New()
+
+	params1 := manifests.Params{
+		Config:      cfg,
+		OpAMPBridge: opampBridge1,
+		Log:         logger,
+	}
+
+	d1 := Deployment(params1)
+
+	assert.False(t, d1.Spec.Template.Spec.HostPID)
+
+	// Test HostPID=true
+	opampBridge2 := v1alpha1.OpAMPBridge{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "my-instance-HostPID",
+		},
+		Spec: v1alpha1.OpAMPBridgeSpec{
+			HostPID: true,
+		},
+	}
+
+	cfg = config.New()
+
+	params2 := manifests.Params{
+		Config:      cfg,
+		OpAMPBridge: opampBridge2,
+		Log:         logger,
+	}
+
+	d2 := Deployment(params2)
+	assert.True(t, d2.Spec.Template.Spec.HostPID, true)
+}
