@@ -12,6 +12,7 @@ import (
 	go_yaml "github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	colfg "go.opentelemetry.io/collector/featuregate"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-operator/internal/config"
 	"github.com/open-telemetry/opentelemetry-operator/internal/manifests"
 	"github.com/open-telemetry/opentelemetry-operator/internal/manifests/collector"
+	"github.com/open-telemetry/opentelemetry-operator/pkg/featuregate"
 )
 
 var testTolerationValues = []v1.Toleration{
@@ -566,7 +568,37 @@ func TestDeploymentDNSConfig(t *testing.T) {
 	assert.Equal(t, d.Spec.Template.Spec.DNSConfig.Nameservers, []string{"8.8.8.8"})
 }
 
-func TestDeploymentHostPID(t *testing.T) {
+func TestDeploymentHostPIDIgnoredWhenFeatureFlagDisabled(t *testing.T) {
+	require.NoError(t, colfg.GlobalRegistry().Set(featuregate.EnableAllowHostPIDSupport.ID(), false))
+	assert.False(t, featuregate.EnableAllowHostPIDSupport.IsEnabled())
+
+	// Test default
+	targetAllocator := targetAllocatorInstance()
+	otelcol := collectorInstance()
+	params := Params{
+		Collector:       otelcol,
+		TargetAllocator: targetAllocator,
+		Config:          config.New(),
+		Log:             logger,
+	}
+
+	d1, err := Deployment(params)
+	require.NoError(t, err)
+
+	assert.False(t, d1.Spec.Template.Spec.HostPID)
+
+	// Test hostPID=true
+	params.TargetAllocator.Spec.HostPID = true
+
+	d2, err := Deployment(params)
+	require.NoError(t, err)
+	assert.False(t, d2.Spec.Template.Spec.HostPID)
+}
+
+func TestDeploymentHostPIDOnlyWhenFeatureFlagEnabled(t *testing.T) {
+	require.NoError(t, colfg.GlobalRegistry().Set(featuregate.EnableAllowHostPIDSupport.ID(), true))
+	assert.True(t, featuregate.EnableAllowHostPIDSupport.IsEnabled())
+
 	// Test default
 	targetAllocator := targetAllocatorInstance()
 	otelcol := collectorInstance()

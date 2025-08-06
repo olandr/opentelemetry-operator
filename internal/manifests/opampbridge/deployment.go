@@ -11,6 +11,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-operator/internal/manifests"
 	"github.com/open-telemetry/opentelemetry-operator/internal/manifests/manifestutils"
 	"github.com/open-telemetry/opentelemetry-operator/internal/naming"
+	"github.com/open-telemetry/opentelemetry-operator/pkg/featuregate"
 )
 
 // Deployment builds the deployment for the given instance.
@@ -48,7 +49,7 @@ func Deployment(params manifests.Params) *appsv1.Deployment {
 					DNSPolicy:                 manifestutils.GetDNSPolicy(params.OpAMPBridge.Spec.HostNetwork, params.OpAMPBridge.Spec.PodDNSConfig),
 					DNSConfig:                 &params.OpAMPBridge.Spec.PodDNSConfig,
 					HostNetwork:               params.OpAMPBridge.Spec.HostNetwork,
-					HostPID:                   params.OpAMPBridge.Spec.HostPID,
+					HostPID:                   featuregate.EnableAllowHostPIDSupport.IsEnabled() && params.OpAMPBridge.Spec.HostPID,
 					Tolerations:               params.OpAMPBridge.Spec.Tolerations,
 					NodeSelector:              params.OpAMPBridge.Spec.NodeSelector,
 					SecurityContext:           params.OpAMPBridge.Spec.PodSecurityContext,

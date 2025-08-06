@@ -7,12 +7,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	colfg "go.opentelemetry.io/collector/featuregate"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/open-telemetry/opentelemetry-operator/apis/v1alpha1"
 	"github.com/open-telemetry/opentelemetry-operator/internal/config"
 	"github.com/open-telemetry/opentelemetry-operator/internal/manifests"
+	"github.com/open-telemetry/opentelemetry-operator/pkg/featuregate"
 )
 
 var testTolerationValues = []v1.Toleration{
@@ -483,7 +486,10 @@ func TestDeploymentDNSConfig(t *testing.T) {
 	assert.Equal(t, d.Spec.Template.Spec.DNSConfig.Nameservers, []string{"8.8.8.8"})
 }
 
-func TestDeploymentHostPID(t *testing.T) {
+func TestDeploymentHostPIDIgnoredWhenFeatureFlagDisabled(t *testing.T) {
+	require.NoError(t, colfg.GlobalRegistry().Set(featuregate.EnableAllowHostPIDSupport.ID(), false))
+	assert.False(t, featuregate.EnableAllowHostPIDSupport.IsEnabled())
+
 	// Test default
 	opampBridge1 := v1alpha1.OpAMPBridge{
 		ObjectMeta: metav1.ObjectMeta{
@@ -522,5 +528,50 @@ func TestDeploymentHostPID(t *testing.T) {
 	}
 
 	d2 := Deployment(params2)
-	assert.True(t, d2.Spec.Template.Spec.HostPID, true)
+	assert.False(t, d2.Spec.Template.Spec.HostPID)
+}
+
+func TestDeploymentHostPIDOnlyWhenFeatureFlagEnabled(t *testing.T) {
+	require.NoError(t, colfg.GlobalRegistry().Set(featuregate.EnableAllowHostPIDSupport.ID(), true))
+	assert.True(t, featuregate.EnableAllowHostPIDSupport.IsEnabled())
+
+	// Test default
+	opampBridge1 := v1alpha1.OpAMPBridge{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "my-instance",
+		},
+	}
+
+	cfg := config.New()
+
+	params1 := manifests.Params{
+		Config:      cfg,
+		OpAMPBridge: opampBridge1,
+		Log:         logger,
+	}
+
+	d1 := Deployment(params1)
+
+	assert.False(t, d1.Spec.Template.Spec.HostPID)
+
+	// Test HostPID=true
+	opampBridge2 := v1alpha1.OpAMPBridge{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "my-instance-HostPID",
+		},
+		Spec: v1alpha1.OpAMPBridgeSpec{
+			HostPID: true,
+		},
+	}
+
+	cfg = config.New()
+
+	params2 := manifests.Params{
+		Config:      cfg,
+		OpAMPBridge: opampBridge2,
+		Log:         logger,
+	}
+
+	d2 := Deployment(params2)
+	assert.True(t, d2.Spec.Template.Spec.HostPID)
 }

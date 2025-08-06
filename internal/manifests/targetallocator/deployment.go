@@ -10,6 +10,7 @@ import (
 
 	"github.com/open-telemetry/opentelemetry-operator/internal/manifests/manifestutils"
 	"github.com/open-telemetry/opentelemetry-operator/internal/naming"
+	"github.com/open-telemetry/opentelemetry-operator/pkg/featuregate"
 )
 
 // Deployment builds the deployment for the given instance.
@@ -48,7 +49,7 @@ func Deployment(params Params) (*appsv1.Deployment, error) {
 					DNSPolicy:                     manifestutils.GetDNSPolicy(params.TargetAllocator.Spec.HostNetwork, params.TargetAllocator.Spec.PodDNSConfig),
 					DNSConfig:                     &params.TargetAllocator.Spec.PodDNSConfig,
 					HostNetwork:                   params.TargetAllocator.Spec.HostNetwork,
-					HostPID:                       params.TargetAllocator.Spec.HostPID,
+					HostPID:                       featuregate.EnableAllowHostPIDSupport.IsEnabled() && params.TargetAllocator.Spec.HostPID,
 					ShareProcessNamespace:         &params.TargetAllocator.Spec.ShareProcessNamespace,
 					Tolerations:                   params.TargetAllocator.Spec.Tolerations,
 					NodeSelector:                  params.TargetAllocator.Spec.NodeSelector,
