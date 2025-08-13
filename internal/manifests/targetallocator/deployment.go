@@ -49,7 +49,7 @@ func Deployment(params Params) (*appsv1.Deployment, error) {
 					DNSPolicy:                     manifestutils.GetDNSPolicy(params.TargetAllocator.Spec.HostNetwork, params.TargetAllocator.Spec.PodDNSConfig),
 					DNSConfig:                     &params.TargetAllocator.Spec.PodDNSConfig,
 					HostNetwork:                   params.TargetAllocator.Spec.HostNetwork,
-					HostPID:                       featuregate.EnableAllowHostPIDSupport.IsEnabled() && params.TargetAllocator.Spec.HostPID,
+					HostPID:                       params.TargetAllocator.Spec.HostPID && featuregate.EnableAllowHostPIDSupport.IsEnabled(),
 					ShareProcessNamespace:         &params.TargetAllocator.Spec.ShareProcessNamespace,
 					Tolerations:                   params.TargetAllocator.Spec.Tolerations,
 					NodeSelector:                  params.TargetAllocator.Spec.NodeSelector,

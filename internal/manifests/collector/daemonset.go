@@ -53,7 +53,7 @@ func DaemonSet(params manifests.Params) (*appsv1.DaemonSet, error) {
 					Tolerations:                   params.OtelCol.Spec.Tolerations,
 					NodeSelector:                  params.OtelCol.Spec.NodeSelector,
 					HostNetwork:                   params.OtelCol.Spec.HostNetwork,
-					HostPID:                       featuregate.EnableAllowHostPIDSupport.IsEnabled() && params.OtelCol.Spec.HostPID,
+					HostPID:                       params.OtelCol.Spec.HostPID && featuregate.EnableAllowHostPIDSupport.IsEnabled(),
 					ShareProcessNamespace:         &params.OtelCol.Spec.ShareProcessNamespace,
 					DNSPolicy:                     manifestutils.GetDNSPolicy(params.OtelCol.Spec.HostNetwork, params.OtelCol.Spec.PodDNSConfig),
 					DNSConfig:                     &params.OtelCol.Spec.PodDNSConfig,

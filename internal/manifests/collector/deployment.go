@@ -4,8 +4,6 @@
 package collector
 
 import (
-	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +28,6 @@ func Deployment(params manifests.Params) (*appsv1.Deployment, error) {
 		return nil, err
 	}
 
-	fmt.Printf("%v %v\n", featuregate.EnableAllowHostPIDSupport.IsEnabled(), params.OtelCol.Spec.HostPID)
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
@@ -57,7 +54,7 @@ func Deployment(params manifests.Params) (*appsv1.Deployment, error) {
 					DNSPolicy:                     manifestutils.GetDNSPolicy(params.OtelCol.Spec.HostNetwork, params.OtelCol.Spec.PodDNSConfig),
 					DNSConfig:                     &params.OtelCol.Spec.PodDNSConfig,
 					HostNetwork:                   params.OtelCol.Spec.HostNetwork,
-					HostPID:                       featuregate.EnableAllowHostPIDSupport.IsEnabled() && params.OtelCol.Spec.HostPID,
+					HostPID:                       params.OtelCol.Spec.HostPID && featuregate.EnableAllowHostPIDSupport.IsEnabled(),
 					ShareProcessNamespace:         &params.OtelCol.Spec.ShareProcessNamespace,
 					Tolerations:                   params.OtelCol.Spec.Tolerations,
 					NodeSelector:                  params.OtelCol.Spec.NodeSelector,

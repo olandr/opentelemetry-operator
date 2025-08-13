@@ -49,7 +49,7 @@ func Deployment(params manifests.Params) *appsv1.Deployment {
 					DNSPolicy:                 manifestutils.GetDNSPolicy(params.OpAMPBridge.Spec.HostNetwork, params.OpAMPBridge.Spec.PodDNSConfig),
 					DNSConfig:                 &params.OpAMPBridge.Spec.PodDNSConfig,
 					HostNetwork:               params.OpAMPBridge.Spec.HostNetwork,
-					HostPID:                   featuregate.EnableAllowHostPIDSupport.IsEnabled() && params.OpAMPBridge.Spec.HostPID,
+					HostPID:                   params.OpAMPBridge.Spec.HostPID && featuregate.EnableAllowHostPIDSupport.IsEnabled(),
 					Tolerations:               params.OpAMPBridge.Spec.Tolerations,
 					NodeSelector:              params.OpAMPBridge.Spec.NodeSelector,
 					SecurityContext:           params.OpAMPBridge.Spec.PodSecurityContext,
